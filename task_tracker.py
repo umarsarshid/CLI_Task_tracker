@@ -31,38 +31,50 @@ import json
 
 def load_tasks():
     try:
-        with open('/tasks.json', 'r') as file:
+        with open('tasks.json', 'r') as file:
             return json.load(file)
     except FileNotFoundError:
         return []
+    except json.JSONDecodeError as e:
+        print(f"Error loading tasks: {e}")
+        return []
 
 def save_tasks(tasks):
-    with open('tasks.json', 'w') as file:
-        json.dump(tasks, file, indent=4)
+    try:
+        with open('tasks.json', 'w') as file:
+            json.dump(tasks, file, indent=4)
+    except Exception as e:
+        print(f"Error saving tasks: {e}")
 
 def create_task(id, description):
-    task = Task(id, description)
-    tasks = load_tasks()
-    tasks.append(task.to_dict())
-    save_tasks(tasks)
-
-def add_task(args):
-    create_task(args.id, args.description)
+    try:
+        tasks = load_tasks()
+        task = Task(id, description)
+        tasks.append(task.to_dict())
+        save_tasks(tasks)
+    except Exception as e:
+        print(f"Error creating task: {e}")
 
 def update_task(args):
-    tasks = load_tasks()
-    for task in tasks:
-        if task['id'] == args.id:
-            task['description'] = args.description
-            task['status'] = args.status
-            save_tasks(tasks)
-            return
-    print("Task not found")
+    try:
+        tasks = load_tasks()
+        for task in tasks:
+            if task['id'] == args.id:
+                task['description'] = args.description
+                task['status'] = args.status
+                save_tasks(tasks)
+                return
+        print("Task not found")
+    except Exception as e:
+        print(f"Error updating task: {e}")
 
 def delete_task(args):
-    tasks = load_tasks()
-    tasks = [task for task in tasks if task['id'] != args.id]
-    save_tasks(tasks)
+    try:
+        tasks = load_tasks()
+        tasks = [task for task in tasks if task['id'] != args.id]
+        save_tasks(tasks)
+    except Exception as e:
+        print(f"Error deleting task: {e}")
 
 def list_tasks(args):
     tasks = load_tasks()
@@ -146,7 +158,10 @@ def main():
 
     args = parser.parse_args()
     if args.command:
-        args.func(args)
+        try:
+            args.func(args)
+        except Exception as e:
+            print(f"Error executing command: {e}")
     else:
         parser.print_help()
         sys.exit(1)
